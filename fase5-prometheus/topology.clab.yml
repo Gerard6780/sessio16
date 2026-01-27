@@ -48,7 +48,7 @@ topology:
       kind: linux
       image: stork-server:latest
       env:
-        STORK_DATABASE_HOST: clab-kea-lab-prometheus-postgres
+        STORK_DATABASE_HOST: postgres
         STORK_DATABASE_PORT: "5432"
         STORK_DATABASE_NAME: stork
         STORK_DATABASE_USER_NAME: postgres
@@ -96,15 +96,15 @@ topology:
         - ./configs/kea-primary/kea-dhcp4.conf:/etc/kea/kea-dhcp4.conf:ro
         - ./configs/kea-primary/kea-ctrl-agent.conf:/etc/kea/kea-ctrl-agent.conf:ro
       env:
-        STORK_SERVER_URL: "http://clab-kea-lab-prometheus-stork-server:8080"
-        STORK_AGENT_HOST: "clab-kea-lab-prometheus-kea-primary"
+        STORK_SERVER_URL: "http://stork-server:8080"
+        STORK_AGENT_HOST: "kea-primary"
       startup-delay: 25
       exec:
-        - ip addr add 10.50.1.10/24 dev eth1
-        - ip addr add 10.50.99.10/24 dev eth2
-        - ip route add 10.50.10.0/24 via 10.50.1.20
-        - ip route add 10.50.20.0/24 via 10.50.1.21
-        - ip route add 10.50.30.0/24 via 10.50.1.22
+        - ip addr add 10.25.115.10/24 dev eth1
+        - ip addr add 10.25.115.40/24 dev eth2
+        - ip route add 10.25.115.64/26 via 10.25.115.20
+        - ip route add 10.25.115.128/26 via 10.25.115.21
+        - ip route add 10.25.115.192/26 via 10.25.115.22
 
     kea-secondary:
       kind: linux
@@ -113,15 +113,15 @@ topology:
         - ./configs/kea-secondary/kea-dhcp4.conf:/etc/kea/kea-dhcp4.conf:ro
         - ./configs/kea-secondary/kea-ctrl-agent.conf:/etc/kea/kea-ctrl-agent.conf:ro
       env:
-        STORK_SERVER_URL: "http://clab-kea-lab-prometheus-stork-server:8080"
-        STORK_AGENT_HOST: "clab-kea-lab-prometheus-kea-secondary"
+        STORK_SERVER_URL: "http://stork-server:8080"
+        STORK_AGENT_HOST: "kea-secondary"
       startup-delay: 25
       exec:
-        - ip addr add 10.50.1.11/24 dev eth1
-        - ip addr add 10.50.99.11/24 dev eth2
-        - ip route add 10.50.10.0/24 via 10.50.1.20
-        - ip route add 10.50.20.0/24 via 10.50.1.21
-        - ip route add 10.50.30.0/24 via 10.50.1.22
+        - ip addr add 10.25.115.11/24 dev eth1
+        - ip addr add 10.25.115.41/24 dev eth2
+        - ip route add 10.25.115.64/26 via 10.25.115.20
+        - ip route add 10.25.115.128/26 via 10.25.115.21
+        - ip route add 10.25.115.192/26 via 10.25.115.22
 
     # ==================
     # RELAYS DHCP
@@ -131,34 +131,34 @@ topology:
       kind: linux
       image: kea-relay:latest
       env:
-        DHCP_SERVER: "10.50.1.10 10.50.1.11"
+        DHCP_SERVER: "10.25.115.10 10.25.115.11"
         LISTEN_INTERFACE: "eth2"
       startup-delay: 15
       exec:
-        - ip addr add 10.50.1.20/24 dev eth1
-        - ip addr add 10.50.10.1/24 dev eth2
+        - ip addr add 10.25.115.20/24 dev eth1
+        - ip addr add 10.25.115.65/24 dev eth2
 
     relay-vlan20:
       kind: linux
       image: kea-relay:latest
       env:
-        DHCP_SERVER: "10.50.1.10 10.50.1.11"
+        DHCP_SERVER: "10.25.115.10 10.25.115.11"
         LISTEN_INTERFACE: "eth2"
       startup-delay: 15
       exec:
-        - ip addr add 10.50.1.21/24 dev eth1
-        - ip addr add 10.50.20.1/24 dev eth2
+        - ip addr add 10.25.115.21/24 dev eth1
+        - ip addr add 10.25.115.129/24 dev eth2
 
     relay-vlan30:
       kind: linux
       image: kea-relay:latest
       env:
-        DHCP_SERVER: "10.50.1.10 10.50.1.11"
+        DHCP_SERVER: "10.25.115.10 10.25.115.11"
         LISTEN_INTERFACE: "eth2"
       startup-delay: 15
       exec:
-        - ip addr add 10.50.1.22/24 dev eth1
-        - ip addr add 10.50.30.1/24 dev eth2
+        - ip addr add 10.25.115.22/24 dev eth1
+        - ip addr add 10.25.115.193/24 dev eth2
 
     # ==================
     # CLIENTS
@@ -186,27 +186,27 @@ topology:
       cmd: sleep infinity
 
   links:
-    # Xarxa Heartbeat HA (10.50.99.0/24)
+    # Xarxa Heartbeat HA (10.25.115.40/24 range)
     - endpoints: ["kea-primary:eth2", "kea-secondary:eth2"]
 
-    # Xarxa Backend (Kea <-> Relays) - 10.50.1.0/24
+    # Xarxa Backend (Kea <-> Relays)
     - endpoints: ["kea-primary:eth1", "br-backend:be-kp"]
     - endpoints: ["kea-secondary:eth1", "br-backend:be-ks"]
     - endpoints: ["relay-vlan10:eth1", "br-backend:be-r10"]
     - endpoints: ["relay-vlan20:eth1", "br-backend:be-r20"]
     - endpoints: ["relay-vlan30:eth1", "br-backend:be-r30"]
 
-    # VLAN 10 - 10.50.10.0/24
+    # VLAN 10
     - endpoints: ["relay-vlan10:eth2", "br-vlan10:v10-relay"]
     - endpoints: ["client-vlan10:eth1", "br-vlan10:v10-cli"]
     - endpoints: ["perfdhcp:eth1", "br-vlan10:v10-perf"]
 
-    # VLAN 20 - 10.50.20.0/24
+    # VLAN 20
     - endpoints: ["relay-vlan20:eth2", "br-vlan20:v20-relay"]
     - endpoints: ["client-vlan20:eth1", "br-vlan20:v20-cli"]
     - endpoints: ["perfdhcp:eth2", "br-vlan20:v20-perf"]
 
-    # VLAN 30 - 10.50.30.0/24
+    # VLAN 30
     - endpoints: ["relay-vlan30:eth2", "br-vlan30:v30-relay"]
     - endpoints: ["client-vlan30:eth1", "br-vlan30:v30-cli"]
     - endpoints: ["perfdhcp:eth3", "br-vlan30:v30-perf"]
