@@ -47,7 +47,7 @@ topology:
       kind: linux
       image: stork-server:latest
       env:
-        STORK_DATABASE_HOST: postgres
+        STORK_DATABASE_HOST: clab-kea-lab-stork-postgres
         STORK_DATABASE_PORT: "5432"
         STORK_DATABASE_NAME: stork
         STORK_DATABASE_USER_NAME: postgres
@@ -67,15 +67,15 @@ topology:
         - ./configs/kea-primary/kea-dhcp4.conf:/etc/kea/kea-dhcp4.conf:ro
         - ./configs/kea-primary/kea-ctrl-agent.conf:/etc/kea/kea-ctrl-agent.conf:ro
       env:
-        STORK_SERVER_URL: "http://stork-server:8080"
-        STORK_AGENT_HOST: "kea-primary"
+        STORK_SERVER_URL: "http://clab-kea-lab-stork-stork-server:8080"
+        STORK_AGENT_HOST: "clab-kea-lab-stork-kea-primary"
       startup-delay: 25
       exec:
-        - ip addr add 10.25.115.10/27 dev eth1
-        - ip addr add 10.25.115.40/27 dev eth2
-        - ip route add 10.25.115.64/26 via 10.25.115.20
-        - ip route add 10.25.115.128/26 via 10.25.115.21
-        - ip route add 10.25.115.192/26 via 10.25.115.22
+        - ip addr add 10.50.1.10/24 dev eth1
+        - ip addr add 10.50.99.10/24 dev eth2
+        - ip route add 10.50.10.0/24 via 10.50.1.20
+        - ip route add 10.50.20.0/24 via 10.50.1.21
+        - ip route add 10.50.30.0/24 via 10.50.1.22
 
     kea-secondary:
       kind: linux
@@ -84,15 +84,15 @@ topology:
         - ./configs/kea-secondary/kea-dhcp4.conf:/etc/kea/kea-dhcp4.conf:ro
         - ./configs/kea-secondary/kea-ctrl-agent.conf:/etc/kea/kea-ctrl-agent.conf:ro
       env:
-        STORK_SERVER_URL: "http://stork-server:8080"
-        STORK_AGENT_HOST: "kea-secondary"
+        STORK_SERVER_URL: "http://clab-kea-lab-stork-stork-server:8080"
+        STORK_AGENT_HOST: "clab-kea-lab-stork-kea-secondary"
       startup-delay: 25
       exec:
-        - ip addr add 10.25.115.11/27 dev eth1
-        - ip addr add 10.25.115.41/27 dev eth2
-        - ip route add 10.25.115.64/26 via 10.25.115.20
-        - ip route add 10.25.115.128/26 via 10.25.115.21
-        - ip route add 10.25.115.192/26 via 10.25.115.22
+        - ip addr add 10.50.1.11/24 dev eth1
+        - ip addr add 10.50.99.11/24 dev eth2
+        - ip route add 10.50.10.0/24 via 10.50.1.20
+        - ip route add 10.50.20.0/24 via 10.50.1.21
+        - ip route add 10.50.30.0/24 via 10.50.1.22
 
     # ==================
     # RELAYS DHCP
@@ -102,34 +102,34 @@ topology:
       kind: linux
       image: kea-relay:latest
       env:
-        DHCP_SERVER: "10.25.115.10 10.25.115.11"
+        DHCP_SERVER: "10.50.1.10 10.50.1.11"
         LISTEN_INTERFACE: "eth2"
       startup-delay: 15
       exec:
-        - ip addr add 10.25.115.20/27 dev eth1
-        - ip addr add 10.25.115.65/26 dev eth2
+        - ip addr add 10.50.1.20/24 dev eth1
+        - ip addr add 10.50.10.1/24 dev eth2
 
     relay-vlan20:
       kind: linux
       image: kea-relay:latest
       env:
-        DHCP_SERVER: "10.25.115.10 10.25.115.11"
+        DHCP_SERVER: "10.50.1.10 10.50.1.11"
         LISTEN_INTERFACE: "eth2"
       startup-delay: 15
       exec:
-        - ip addr add 10.25.115.21/27 dev eth1
-        - ip addr add 10.25.115.129/26 dev eth2
+        - ip addr add 10.50.1.21/24 dev eth1
+        - ip addr add 10.50.20.1/24 dev eth2
 
     relay-vlan30:
       kind: linux
       image: kea-relay:latest
       env:
-        DHCP_SERVER: "10.25.115.10 10.25.115.11"
+        DHCP_SERVER: "10.50.1.10 10.50.1.11"
         LISTEN_INTERFACE: "eth2"
       startup-delay: 15
       exec:
-        - ip addr add 10.25.115.22/27 dev eth1
-        - ip addr add 10.25.115.193/26 dev eth2
+        - ip addr add 10.50.1.22/24 dev eth1
+        - ip addr add 10.50.30.1/24 dev eth2
 
     # ==================
     # CLIENTS
@@ -177,7 +177,7 @@ topology:
     - endpoints: ["client-vlan20:eth1", "br-vlan20:v20-cli"]
     - endpoints: ["perfdhcp:eth2", "br-vlan20:v20-perf"]
 
-    # VLAN 30 - 10.25.115.0/24
+    # VLAN 30 - 10.50.30.0/24
     - endpoints: ["relay-vlan30:eth2", "br-vlan30:v30-relay"]
     - endpoints: ["client-vlan30:eth1", "br-vlan30:v30-cli"]
     - endpoints: ["perfdhcp:eth3", "br-vlan30:v30-perf"]
