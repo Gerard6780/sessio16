@@ -44,7 +44,7 @@ topology:
         - ip addr add 10.50.1.10/24 dev eth1
         - ip route add 10.50.10.0/24 via 10.50.1.20
         - ip route add 10.50.20.0/24 via 10.50.1.21
-        - ip route add 10.50.30.0/24 via 10.50.1.22
+        - ip route add 10.50.30.0/24 via 10.50.1.20 
 
     # ==================
     # RELAYS DHCP
@@ -55,7 +55,7 @@ topology:
       image: kea-relay:latest
       env:
         DHCP_SERVER: "10.50.1.10"
-        LISTEN_INTERFACE: "eth2"
+        LISTEN_INTERFACE: "eth1" 
       startup-delay: 10
       exec:
         - ip addr add 10.50.1.20/24 dev eth1
@@ -65,11 +65,11 @@ topology:
       kind: linux
       image: kea-relay:latest
       env:
-        DHCP_SERVER: "10.50.1.10"
+        DHCP_SERVER: "10.50.1.11" 
         LISTEN_INTERFACE: "eth2"
       startup-delay: 10
       exec:
-        - ip addr add 10.50.1.21/24 dev eth1
+        - ip addr add 10.50.1.31/24 dev eth1 
         - ip addr add 10.50.20.1/24 dev eth2
 
     relay-vlan30:
